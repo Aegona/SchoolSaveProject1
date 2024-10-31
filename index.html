@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ไฟล์อัปโหลดและจัดการ</title>
+    <style>
+        /* ธีมขาวแดง */
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: auto; 
+            text-align: center; 
+            background-color: #ffffff; 
+            color: #333;
+        }
+        
+        /* ส่วนหัว */
+        .header { 
+            display: flex; 
+            align-items: center; 
+            justify-content: flex-start; 
+            margin-top: 20px; 
+        }
+        .header img { 
+            width: 50px; 
+            height: 50px; 
+            margin-right: 10px; 
+        }
+        .header h2 { 
+            font-size: 24px; 
+            color: #b30000; /* สีแดงเข้ม */
+        }
+
+        /* ตาราง */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            background-color: #fff;
+        }
+        th, td { 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            text-align: center; 
+        }
+        th { 
+            background-color: #b30000; /* สีแดงเข้ม */
+            color: #fff;
+        }
+
+        /* ปุ่ม */
+        .button { 
+            margin-top: 20px; 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            color: #fff; 
+            background-color: #b30000; 
+            border: none; 
+            border-radius: 5px;
+            cursor: pointer; 
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #d90000; /* สีแดงอ่อนขึ้น */
+        }
+
+        .creator { 
+        position: fixed; 
+        bottom: 10px; 
+        left: 50%; 
+        transform: translateX(-50%); 
+        font-size: 16px; 
+        font-weight: bold;
+        animation: colorChange 3s infinite;
+    }
+
+    /* Animation เปลี่ยนสีของชื่อผู้สร้าง */
+    @keyframes colorChange {
+        0% { color: red; }
+        25% { color: orange; }
+        50% { color: yellow; }
+        75% { color: green; }
+        100% { color: blue; }
+    }
+
+
+    </style>
+</head>
+<body>
+
+    <!-- ส่วนหัว -->
+    <div class="header">
+        <img src="https://www.mtk.ac.th/images/importancepic/mtklogojpg.jpg" alt="โลโก้"> <!-- ใส่ URL รูปที่ต้องการแทน -->
+         <h1> MTK SMART</h1>
+    </div>
+
+    <!-- ส่วนตารางไฟล์ -->
+    <h2>ไฟล์ที่อัปโหลด</h2>
+    <table id="fileTable">
+        <tr>
+            <th>ชื่อไฟล์</th>
+            <th>การกระทำ</th>
+        </tr>
+    </table>
+
+    <!-- ฟอร์มสำหรับอัปโหลดไฟล์ -->
+    <div>
+        <input type="file" id="fileInput">
+        <button class="button" onclick="promptForPasswordAndUpload()">อัปโหลด</button>
+    </div>
+
+    <!-- ชื่อผู้สร้าง -->
+    <div class="creator" id="creator">สร้างโดย อนุชิต แสนทวีสุข ม3/4</div>
+    <script>
+        // สร้างออบเจ็กต์สำหรับเก็บรหัสผ่านของไฟล์แต่ละไฟล์
+        const filePasswords = {};
+        const uploadedFiles = {};
+
+        // ฟังก์ชันขอรหัสผ่านก่อนอัปโหลด
+        function promptForPasswordAndUpload() {
+            const fileInput = document.getElementById('fileInput');
+            
+            if (fileInput.files.length === 0) {
+                alert("กรุณาเลือกไฟล์!");
+                return;
+            }
+
+            // ให้ผู้ใช้ตั้งรหัสผ่านสำหรับไฟล์นี้
+            const password = prompt("ตั้งรหัสผ่านสำหรับไฟล์นี้:");
+            if (password) {
+                const file = fileInput.files[0];
+                filePasswords[file.name] = password; // บันทึกรหัสผ่านสำหรับไฟล์นี้
+                uploadedFiles[file.name] = file; // เก็บข้อมูลไฟล์นี้
+                addFileToTable(file.name);
+                fileInput.value = '';
+            } else {
+                alert("กรุณาตั้งรหัสผ่านก่อนอัปโหลด!");
+            }
+        }
+
+        // ฟังก์ชันเพิ่มไฟล์ลงในตาราง
+        function addFileToTable(fileName) {
+            const table = document.getElementById('fileTable');
+            const row = table.insertRow();
+            
+            const fileNameCell = row.insertCell(0);
+            fileNameCell.textContent = fileName;
+
+            const actionsCell = row.insertCell(1);
+            actionsCell.innerHTML = `
+                <button onclick="checkPasswordForDownload('${fileName}')">ดาวน์โหลด</button>
+                <button onclick="checkPasswordForDelete(this, '${fileName}')">ลบ</button>
+            `;
+        }
+
+        // ฟังก์ชันตรวจสอบรหัสผ่านก่อนดาวน์โหลด
+        function checkPasswordForDownload(fileName) {
+            const password = prompt("ใส่รหัสผ่านก่อนดาวน์โหลด:");
+            if (password === filePasswords[fileName]) {
+                downloadFile(fileName);
+            } else {
+                alert("รหัสผ่านไม่ถูกต้อง!");
+            }
+        }
+
+        // ฟังก์ชันดาวน์โหลดไฟล์จริง
+        function downloadFile(fileName) {
+            const file = uploadedFiles[fileName];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url); // ลบ URL หลังดาวน์โหลด
+            } else {
+                alert("ไม่พบไฟล์ที่ต้องการดาวน์โหลด");
+            }
+        }
+
+        // ฟังก์ชันตรวจสอบรหัสผ่านก่อนลบ
+        function checkPasswordForDelete(button, fileName) {
+            const password = prompt("ใส่รหัสผ่านก่อนลบ:");
+            if (password === filePasswords[fileName]) {
+                deleteFile(button, fileName);
+            } else {
+                alert("รหัสผ่านไม่ถูกต้อง!");
+            }
+        }
+
+        // ฟังก์ชันลบไฟล์
+        function deleteFile(button, fileName) {
+            const row = button.closest("tr");
+            row.remove();
+            delete filePasswords[fileName]; // ลบรหัสผ่านของไฟล์นี้ออกจาก object
+            delete uploadedFiles[fileName]; // ลบไฟล์ออกจากออบเจ็กต์
+            alert(`${fileName} ถูกลบเรียบร้อย`);
+        }
+    </script>
+
+</body>
+</html>
